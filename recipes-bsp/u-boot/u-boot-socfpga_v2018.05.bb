@@ -7,9 +7,7 @@ FILESEXTRAPATHS =. "${THISDIR}/u-boot:"
 
 SRCREV = "890e79f2b1c26c5ba1a86d179706348aec7feef7"
 
-RC_URI_append = "\
-    file://0001-sockit-settings-to-quartus-handoff.patch \
-        "
+SRC_URI_append = "file://sockit-quartus-handoff.patch"
 
 # Some versions of u-boot use .bin and others use .img.
 # By default we use .sfp as this is what is generated
