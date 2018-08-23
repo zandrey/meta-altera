@@ -1,0 +1,40 @@
+
+setenv bootimage "zImage"
+setenv mmcloadpart 1
+setenv rbf_file_name "soc_system.rbf"
+
+setenv mmcloadcmd "fatload"
+setenv mmcroot "/dev/mmcblk0p3"
+
+#mmcboot=setenv bootargs console=ttyS0,115200 root=${mmcroot} rw rootwait;bootz ${loadaddr} - ${fdt_addr}
+#mmcload=mmc rescan;load mmc 0:1 ${loadaddr} ${bootimage};load mmc 0:1 ${fdt_addr} ${fdtimage}
+#mmcroot=/dev/mmcblk0p2
+#ramboot=setenv bootargs console=ttyS0,115200;bootm ${loadaddr} - ${fdt_addr}
+
+#--------------------------------------------------------------
+#      Load RBF file to FPGA and enable the bridge
+#--------------------------------------------------------------
+# First we would put the magic number at the beginning of the
+# load region. If FPGA RBG file would be missing in the IMG
+# file, then it would not be loaded. In this case we would not
+# enable any FGPA bridge, and would boot Linux without FPGA.
+
+fpgadata_mem_magic=0xdeadbeef
+mw.l $ramdisk_addr_r $fpgadata_mem_magic
+
+${mmcloadcmd} mmc 0:${mmcloadpart} $ramdisk_addr_r $rbf_file_name;
+
+if itest.l *$ramdisk_addr_r != $fpgadata_mem_magic ; then
+    fpga load 0 ${ramdisk_addr_r} ${filesize};
+    bridge enable
+else
+    echo " [ ERROR ]: RBF File was not found or could not be loaded! Booting without FPGA Bridge!";
+    bridge disable
+fi
+#--------------------------------------------------------------
+
+mmc rescan
+${mmcloadcmd} mmc 0:${mmcloadpart} ${kernel_addr_r} ${bootimage};${mmcloadcmd} mmc 0:${mmcloadpart} ${fdt_addr_r} ${fdtfile}
+setenv bootargs "console=ttyS0,115200 uio_pdrv_genirq.of_id=leica-uio root=${mmcroot} rw rootwait"
+bootz ${kernel_addr_r} - ${fdt_addr_r}
+
