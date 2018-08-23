@@ -2,7 +2,7 @@
 # Additional boot script recipe
 ###########################################################
 # Source for script
-SRC_URI += "file://aux-boot-script.txt" 
+SRC_URI_append = " file://aux-boot-script.txt"
 
 # Destination to be used by Build system and by U-Boot environment
 UBOOT_ENV = "cyclone5"
